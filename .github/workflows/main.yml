@@ -21,4 +21,4 @@ jobs:
       run: |
         echo "icebear ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/icebear
     - name: run
-      run: playit --secret 4db0fd446c86fd5d940f4b308396b5672c16277eebdec19673d86fda334d183b
+      run: playit --secret 71cf1c7db4eefe7b5a35cab4124beeeadda1f52f4af686f1a494b14c8da5783f
