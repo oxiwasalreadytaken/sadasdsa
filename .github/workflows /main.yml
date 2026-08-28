@@ -1,0 +1,24 @@
+name: CI
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download
+      run: curl -SsL https://playit-cloud.github.io/ppa/key.gpg | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/playit.gpg >/dev/null && echo "deb [signed-by=/etc/apt/trusted.gpg.d/playit.gpg] https://playit-cloud.github.io/ppa/data ./" | sudo tee /etc/apt/sources.list.d/playit-cloud.list && sudo apt update && sudo apt install playit
+    - name: Create new user
+      run: |
+        sudo adduser --disabled-password --ingroup sudo icebear
+        sudo passwd icebear <<EOF
+        passisok
+        passisok
+        EOF
+    - name: Grant sudo privileges without password prompt
+      run: |
+        echo "icebear ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/icebear
+    - name: run
+      run: playit --secret 4db0fd446c86fd5d940f4b308396b5672c16277eebdec19673d86fda334d183b
