@@ -37,7 +37,7 @@ jobs:
           @'
           serverAddr = "130.61.242.78"
           serverPort = 7000
-          auth.token = "changeme123"
+          auth.token = "changeme123!"
 
           [[proxies]]
           name = "gh-runner-rdp"
