@@ -11,17 +11,25 @@ jobs:
         shell: pwsh
         run: winget install --id DevelopedMethods.playit --exact --version 0.16.3 --silent --accept-package-agreements --accept-source-agreements
 
+      - name: Enable RDP
+        shell: pwsh
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+
       - name: Change RunnerAdmin password
         shell: pwsh
         run: |
           $Password = ConvertTo-SecureString "P@ssw0rd!" -AsPlainText -Force
           Set-LocalUser -Name "RunnerAdmin" -Password $Password
 
-      - name: Run
+      - name: Run playit
         shell: pwsh
-        env:
-          SECRET_KEY: 35948525fbfac9777a09476e07eceb0fb548f0cad52b3695afa9867816b66758
         run: |
           $exe = (Get-ChildItem "C:\Program Files\playit_gg" -Recurse -Filter playit*.exe | Select-Object -First 1).FullName
-          Write-Host "Using $exe"
+          $dir = "$env:LOCALAPPDATA\playit_gg"
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          Set-Content "$dir\playit.toml" 'secret_key = "35948525fbfac9777a09476e07eceb0fb548f0cad52b3695afa9867816b66758"'
+          Write-Host "Secret path: $(& $exe secret-path)"
           & $exe
