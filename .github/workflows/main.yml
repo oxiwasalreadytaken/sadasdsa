@@ -7,16 +7,16 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Install playit
-        shell: pwsh
-        run: winget install --id DevelopedMethods.playit --exact --version 0.16.3 --silent --accept-package-agreements --accept-source-agreements
-
       - name: Enable RDP
         shell: pwsh
         run: |
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+          Set-Service TermService -StartupType Automatic
+          Start-Service TermService
+          Start-Sleep 5
+          Test-NetConnection 127.0.0.1 -Port 3389
 
       - name: Change RunnerAdmin password
         shell: pwsh
@@ -24,12 +24,26 @@ jobs:
           $Password = ConvertTo-SecureString "P@ssw0rd!" -AsPlainText -Force
           Set-LocalUser -Name "RunnerAdmin" -Password $Password
 
-      - name: Run playit
+      - name: Install frpc
         shell: pwsh
         run: |
-          $exe = (Get-ChildItem "C:\Program Files\playit_gg" -Recurse -Filter playit*.exe | Select-Object -First 1).FullName
-          $dir = "$env:LOCALAPPDATA\playit_gg"
-          New-Item -ItemType Directory -Force $dir | Out-Null
-          Set-Content "$dir\playit.toml" 'secret_key = "35948525fbfac9777a09476e07eceb0fb548f0cad52b3695afa9867816b66758"'
-          Write-Host "Secret path: $(& $exe secret-path)"
-          & $exe
+          Invoke-WebRequest "https://github.com/fatedier/frp/releases/download/v0.72.0/frp_0.72.0_windows_amd64.zip" -OutFile frp.zip
+          Expand-Archive frp.zip -DestinationPath frp
+          Move-Item frp\frp_0.72.0_windows_amd64\frpc.exe frpc.exe
+
+      - name: Run frpc
+        shell: pwsh
+        run: |
+          @'
+          serverAddr = "130.61.242.78"
+          serverPort = 7000
+          auth.token = "changeme123"
+
+          [[proxies]]
+          name = "gh-runner-rdp"
+          type = "tcp"
+          localIP = "127.0.0.1"
+          localPort = 3389
+          remotePort = 20002
+          '@ | Set-Content frpc.toml
+          .\frpc.exe -c frpc.toml
