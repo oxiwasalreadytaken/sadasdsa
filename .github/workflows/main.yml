@@ -21,4 +21,7 @@ jobs:
         shell: pwsh
         env:
           SECRET_KEY: 35948525fbfac9777a09476e07eceb0fb548f0cad52b3695afa9867816b66758
-        run: playit
+        run: |
+          $exe = (Get-ChildItem "C:\Program Files\playit_gg" -Recurse -Filter playit*.exe | Select-Object -First 1).FullName
+          Write-Host "Using $exe"
+          & $exe
