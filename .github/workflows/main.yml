@@ -1,0 +1,29 @@
+name: CI
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Install playit
+      shell: pwsh
+      run: winget install --id DevelopedMethods.playit --exact --version 0.16.3 --silent --accept-package-agreements --accept-source-agreements
+
+
+      - name: Install playit
+        shell: pwsh
+        run: |
+          winget install --id playit.gg.playit --silent --accept-package-agreements --accept-source-agreements
+
+      - name: Change RunnerAdmin password
+        shell: pwsh
+        run: |
+          $Password = ConvertTo-SecureString "P@ssw0rd!" -AsPlainText -Force
+          Set-LocalUser -Name "RunnerAdmin" -Password $Password
+
+      - name: Run
+        shell: pwsh
+        run: |
+          playit --secret 35948525fbfac9777a09476e07eceb0fb548f0cad52b3695afa9867816b66758
